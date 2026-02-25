@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Maintenance App</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      color: #2d3748;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 span {
+      color: #4f46e5;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-row input[type="text"] {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-row input[type="text"]:focus {
+      border-color: #4f46e5;
+    }
+
+    .input-row select {
+      padding: 0.65rem 0.75rem;
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 0.65rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover { background: #4338ca; }
+
+    .filters {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.4rem 0.9rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      background: #fff;
+      color: #4a5568;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+
+    .filter-btn.active {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: #fff;
+    }
+
+    .stats {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      color: #718096;
+    }
+
+    .stat-pill strong { color: #2d3748; }
+
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .task-item {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: box-shadow 0.2s;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: #a0aec0;
+    }
+
+    .task-check {
+      width: 20px;
+      height: 20px;
+      accent-color: #4f46e5;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-text {
+      font-size: 0.95rem;
+      color: #2d3748;
+      word-break: break-word;
+    }
+
+    .task-meta {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      margin-top: 2px;
+    }
+
+    .priority-badge {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .priority-high   { background: #fed7d7; color: #c53030; }
+    .priority-medium { background: #fefcbf; color: #b7791f; }
+    .priority-low    { background: #c6f6d5; color: #276749; }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: #cbd5e0;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-delete:hover { color: #e53e3e; background: #fff5f5; }
+
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      padding: 2rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    .clear-row {
+      margin-top: 1rem;
+      text-align: right;
+    }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid #e2e8f0;
+      color: #718096;
+      font-size: 0.8rem;
+    }
+
+    .btn-ghost:hover { background: #fff5f5; color: #e53e3e; border-color: #e53e3e; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Task <span>Maintenance</span></h1>
+
+    <div class="input-row">
+      <input type="text" id="taskInput" placeholder="Add a new task…" maxlength="200" />
+      <select id="prioritySelect">
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select>
+      <button class="btn btn-primary" onclick="addTask()">Add</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
+      <button class="filter-btn" onclick="setFilter('completed', this)">Completed</button>
+      <button class="filter-btn" onclick="setFilter('high', this)">🔴 High</button>
+      <button class="filter-btn" onclick="setFilter('medium', this)">🟡 Medium</button>
+      <button class="filter-btn" onclick="setFilter('low', this)">🟢 Low</button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <ul class="task-list" id="taskList"></ul>
+
+    <div class="empty-state" id="emptyState" style="display:none;">No tasks found.</div>
+
+    <div class="clear-row">
+      <button class="btn btn-ghost" onclick="clearCompleted()">Clear completed</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'task_maintenance_tasks';
+    let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let currentFilter = 'all';
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const text = input.value.trim();
+      if (!text) { input.focus(); return; }
+
+      const priority = document.getElementById('prioritySelect').value;
+      tasks.unshift({
+        id: Date.now(),
+        text,
+        priority,
+        completed: false,
+        createdAt: new Date().toLocaleString()
+      });
+
+      saveTasks();
+      input.value = '';
+      input.focus();
+      render();
+    }
+
+    function toggleTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) { task.completed = !task.completed; }
+      saveTasks();
+      render();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+      render();
+    }
+
+    function clearCompleted() {
+      tasks = tasks.filter(t => !t.completed);
+      saveTasks();
+      render();
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    }
+
+    function getFiltered() {
+      switch (currentFilter) {
+        case 'active':    return tasks.filter(t => !t.completed);
+        case 'completed': return tasks.filter(t => t.completed);
+        case 'high':      return tasks.filter(t => t.priority === 'high');
+        case 'medium':    return tasks.filter(t => t.priority === 'medium');
+        case 'low':       return tasks.filter(t => t.priority === 'low');
+        default:          return tasks;
+      }
+    }
+
+    function render() {
+      const list = document.getElementById('taskList');
+      const empty = document.getElementById('emptyState');
+      const statsEl = document.getElementById('stats');
+      const filtered = getFiltered();
+
+      const total     = tasks.length;
+      const completed = tasks.filter(t => t.completed).length;
+      const active    = total - completed;
+
+      statsEl.innerHTML = `
+        <span class="stat-pill">Total: <strong>${total}</strong></span>
+        <span class="stat-pill">Active: <strong>${active}</strong></span>
+        <span class="stat-pill">Completed: <strong>${completed}</strong></span>
+      `;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      list.innerHTML = filtered.map(task => `
+        <li class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+          <input class="task-check" type="checkbox" ${task.completed ? 'checked' : ''}
+            onchange="toggleTask(${task.id})" aria-label="Toggle task" />
+          <div class="task-body">
+            <div class="task-text">${escapeHtml(task.text)}</div>
+            <div class="task-meta">${task.createdAt}</div>
+          </div>
+          <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+          <button class="btn-delete" onclick="deleteTask(${task.id})" aria-label="Delete task">✕</button>
+        </li>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.getElementById('taskInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTask();
+    });
+
+    render();
+  </script>
+</body>
+</html>
